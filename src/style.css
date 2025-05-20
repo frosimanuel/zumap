@@ -1,0 +1,106 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f5f5f5;
+}
+
+button {
+  font-size: 1em;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  border: none;
+  background: #0077ff;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+h2, h3 {
+  margin-top: 0;
+}
+
+/* Responsive container */
+#root > div {
+  min-height: 100vh;
+  background: #fff;
+  box-shadow: 0 0 8px #ccc;
+  padding-bottom: 2em;
+}
+
+.zumap-map-container {
+  position: relative;
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100vh;
+  height: 100vh;
+  margin: 0;
+  background: #eee;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.zumap-leaflet-map {
+  height: 100%;
+  width: 100%;
+  border-radius: 0;
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+/* Optional: For non-map content, you can use a boxed layout */
+.zumap-boxed-content {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.zumap-leaflet-map {
+  height: 100%;
+  width: 100%;
+  border-radius: 0;
+  overflow: hidden;
+}
+@media (min-width: 600px) {
+  .zumap-leaflet-map {
+    border-radius: 14px;
+  }
+}
+
+.zumap-map-buttons {
+  position: absolute;
+  left: 0; right: 0; bottom: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  z-index: 1001;
+  pointer-events: none;
+}
+.zumap-map-buttons button {
+  pointer-events: auto;
+  font-size: 18px;
+  padding: 0.7em 1.4em;
+  border-radius: 20px;
+  margin: 0;
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 6px #0077ff22;
+}
+
+.zumap-map-info {
+  position: absolute;
+  z-index: 1000;
+  right: 10px;
+  top: 10px;
+  background: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px #0001;
+  opacity: 0.95;
+}
