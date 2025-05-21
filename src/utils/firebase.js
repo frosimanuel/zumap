@@ -5,13 +5,13 @@ import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAhPG_fHlD31E0ZcbUjkdxcIXKZaiW1fhM",
-  authDomain: "zumap-bc1e3.firebaseapp.com",
-  projectId: "zumap-bc1e3",
-  storageBucket: "zumap-bc1e3.firebasestorage.app",
-  messagingSenderId: "403748843545",
-  appId: "1:403748843545:web:d0e2106ccc4d678f057a88",
-  databaseURL: "https://zumap-bc1e3-default-rtdb.firebaseio.com/"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
 };
 
 
