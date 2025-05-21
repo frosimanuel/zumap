@@ -17,8 +17,6 @@ function MapView({ drops, userLocation, onDropTreasure, onCollectDrop, vpnStatus
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
       }).addTo(leafletMapRef.current);
-    } else {
-      leafletMapRef.current.setView([userLocation.lat, userLocation.lng], 16);
     }
     // Remove old markers
     markersRef.current.forEach(marker => marker.remove());
@@ -72,13 +70,13 @@ function MapView({ drops, userLocation, onDropTreasure, onCollectDrop, vpnStatus
         {drops.length} drops loaded.
       </div>
       {/* Map */}
-      <div ref={mapRef} className="zumap-leaflet-map"></div>
+      <div ref={mapRef} className="zumap-leaflet-map" style={{ height: 'calc(100dvh - 40px)', maxHeight: 'calc(100vh - 40px)' }}></div>
       {/* Buttons, bottom center on mobile, top left on desktop */}
-      <div className="zumap-map-buttons">
+      <div className="zumap-map-buttons" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center' }}>
         <button onClick={onDropTreasure}>Drop Treasure</button>
         <button onClick={() => {
           if (leafletMapRef.current && userLocation) {
-            leafletMapRef.current.setView([userLocation.lat, userLocation.lng], 16, { animate: true });
+            leafletMapRef.current.setView([userLocation.lat, userLocation.lng], leafletMapRef.current.getZoom(), { animate: true });
           }
         }}>Center</button>
       </div>
