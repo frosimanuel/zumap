@@ -12,6 +12,7 @@ function App() {
   const [arDrop, setArDrop] = useState(null);
   const [vpnStatus, setVpnStatus] = useState('unknown'); // 'ok' | 'dummy' | 'unknown'
   const [loading, setLoading] = useState(true);
+  const [locationError, setLocationError] = useState(null);
 
   useEffect(() => {
     // Listen for real-time drop updates
@@ -22,8 +23,14 @@ function App() {
     let watcher;
     if (navigator.geolocation) {
       watcher = navigator.geolocation.watchPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setUserLocation(null),
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setLocationError(null);
+        },
+        (err) => {
+          setUserLocation(null);
+          setLocationError('Location permission denied or unavailable. Please allow location access in your browser settings.');
+        },
         { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
       );
     }
@@ -65,6 +72,13 @@ function App() {
         />
       )}
       {loading && <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#fff8',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>Loading drops...</div>}
+      {locationError && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', background: '#ffefef', color: '#900', zIndex: 3000, padding: 16, textAlign: 'center', fontWeight: 500
+        }}>
+          {locationError}
+        </div>
+      )}
     </div>
   );
 }
