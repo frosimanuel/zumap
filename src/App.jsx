@@ -3,7 +3,7 @@ import MapView from './components/MapView';
 import DropForm from './components/DropForm';
 import ARView from './components/ARView';
 import VPNGate from './components/VPNGate';
-import { getAllDrops, addDrop } from './utils/data';
+import { listenToDrops, addDrop } from './utils/data';
 
 function App() {
   const [drops, setDrops] = useState([]);
@@ -11,9 +11,14 @@ function App() {
   const [showDropForm, setShowDropForm] = useState(false);
   const [arDrop, setArDrop] = useState(null);
   const [vpnStatus, setVpnStatus] = useState('unknown'); // 'ok' | 'dummy' | 'unknown'
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setDrops(getAllDrops());
+    // Listen for real-time drop updates
+    const unsubscribe = listenToDrops((allDrops) => {
+      setDrops(allDrops);
+      setLoading(false);
+    });
     let watcher;
     if (navigator.geolocation) {
       watcher = navigator.geolocation.watchPosition(
@@ -23,15 +28,16 @@ function App() {
       );
     }
     return () => {
+      if (unsubscribe) unsubscribe();
       if (watcher && navigator.geolocation) {
         navigator.geolocation.clearWatch(watcher);
       }
     };
   }, []);
 
-  const handleAddDrop = (drop) => {
-    addDrop(drop);
-    setDrops(getAllDrops());
+  // Accepts (drop, file)
+  const handleAddDrop = async (drop, file) => {
+    await addDrop(drop, file);
     setShowDropForm(false);
   };
 
@@ -48,7 +54,7 @@ function App() {
       {showDropForm && (
         <DropForm
           userLocation={userLocation}
-          onSubmit={handleAddDrop}
+          onSubmit={handleAddDrop} // expects (drop, file)
           onClose={() => setShowDropForm(false)}
         />
       )}
@@ -58,6 +64,7 @@ function App() {
           onClose={() => setArDrop(null)}
         />
       )}
+      {loading && <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#fff8',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>Loading drops...</div>}
     </div>
   );
 }

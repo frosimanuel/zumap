@@ -1,63 +1,41 @@
-// Local mock data layer for drops
+// Firebase data layer for drops
+import { db, storage } from './firebase';
+import { ref, push, set, onValue, remove, get, child } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
-const STORAGE_KEY = 'zumap_drops';
+// Get all drops (one-time fetch)
+export async function getAllDrops() {
+  const snapshot = await get(child(ref(db), 'drops'));
+  const val = snapshot.val() || {};
+  return Object.entries(val).map(([id, drop]) => ({ id, ...drop }));
+}
 
-function load() {
-  try {
-    const json = localStorage.getItem(STORAGE_KEY);
-    let arr = json ? JSON.parse(json) : [];
-    // If no drops, add 3 test drops near Zurich (47.39339, 8.51631)
-    if (!arr || arr.length === 0) {
-      arr = [
-        {
-          id: 'test1',
-          lat: 47.39339,
-          lng: 8.51631,
-          type: 'text',
-          url: 'Welcome to Zurich! This is a test drop.',
-          timestamp: Date.now() - 1000000
-        },
-        {
-          id: 'test2',
-          lat: 47.39349,
-          lng: 8.51731,
-          type: 'image',
-          url: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Z%C3%BCrich_-_Grossm%C3%BCnster_IMG_1252_ShiftN.jpg',
-          timestamp: Date.now() - 900000
-        },
-        {
-          id: 'test3',
-          lat: 47.39359,
-          lng: 8.51531,
-          type: 'pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          timestamp: Date.now() - 800000
-        }
-      ];
-      save(arr);
-    }
-    return arr;
-  } catch {
-    return [];
+// Listen to all drops (real-time)
+export function listenToDrops(callback) {
+  return onValue(ref(db, 'drops'), (snapshot) => {
+    const val = snapshot.val() || {};
+    const drops = Object.entries(val).map(([id, drop]) => ({ id, ...drop }));
+    callback(drops);
+  });
+}
+
+// Add a drop, uploading file if needed
+export async function addDrop(drop, file) {
+  let url = drop.url;
+  if (file) {
+    const ext = drop.type === 'image' ? 'jpg' : 'pdf';
+    const filename = `${Date.now()}.${ext}`;
+    const sRef = storageRef(storage, `drops/${filename}`);
+    await uploadBytes(sRef, file);
+    url = await getDownloadURL(sRef);
   }
+  const dropData = { ...drop, url };
+  const newRef = push(ref(db, 'drops'));
+  await set(newRef, dropData);
+  return { id: newRef.key, ...dropData };
 }
 
-function save(drops) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
-}
-
-export function getAllDrops() {
-  return load();
-}
-
-export function addDrop(drop) {
-  const drops = load();
-  if (!drops.find(d => d.id === drop.id)) {
-    drops.push(drop);
-    save(drops);
-  }
-}
-
-export function resetDrops() {
-  localStorage.removeItem(STORAGE_KEY);
+// Remove all drops (for testing)
+export async function resetDrops() {
+  await set(ref(db, 'drops'), null);
 }

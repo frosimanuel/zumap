@@ -25,29 +25,39 @@ function DropForm({ userLocation, onSubmit, onClose }) {
       setError('Location unavailable.');
       return;
     }
-    let url = '';
     if (type === 'text') {
       if (!text.trim()) {
         setError('Text required.');
         return;
       }
-      url = text;
+      setError('');
+      await onSubmit({
+        id: Date.now().toString(),
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        type,
+        url: text,
+        timestamp: Date.now()
+      }, null);
+      setText('');
     } else if (file) {
-      url = URL.createObjectURL(file);
+      setError('');
+      await onSubmit({
+        id: Date.now().toString(),
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        type,
+        url: '', // will be replaced after upload
+        timestamp: Date.now()
+      }, file);
+      setFile(null);
+      setPreview(null);
     } else {
       setError('File required.');
       return;
     }
-    setError('');
-    onSubmit({
-      id: Date.now().toString(),
-      lat: userLocation.lat,
-      lng: userLocation.lng,
-      type,
-      url,
-      timestamp: Date.now()
-    });
   };
+
 
   return (
     <div style={{
