@@ -100,44 +100,32 @@ function ARView({ drop, onClose }) {
             />
             <div style={{marginTop:8}}>
               <a href={content} download={`drop-${drop.codexCid || 'image'}.png`} style={{color:'#fff',textDecoration:'underline',fontWeight:600}}>Download image</a>
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  fontSize: 18,
-                  marginTop: preview ? 10 : 0
-                }}
-              >
-                {label}
-              </a>
             </div>
-          );
-        })()
-      ) : (
-        // Fallback: show drop.url as before
-        drop.type === 'text' ? (
-          <div style={{ margin: '1em 0', background: '#fff', color: '#222', padding: 8 }}>{drop.url}</div>
+          </div>
         ) : (
-          (() => {
-            // Use codexCid if available, otherwise fallback to drop.url
-            const url = drop.codexCid
-              ? `/api/proxy/codex/${drop.codexCid}/stream`
-              : drop.url;
-            let ext = 'bin';
-            if (drop.type === 'image') ext = 'png';
-            else if (drop.type === 'pdf') ext = 'pdf';
-            return (
-              <a
-                href={url}
-                download={drop.codexCid ? `${drop.codexCid}.${ext}` : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#0ff' }}
-              >
-                Download {drop.type.toUpperCase()}
-              </a>
-            );
-          })()
+          <div style={{ margin: '1em 0' }}>
+            <a
+              href={drop.codexCid ? `/api/proxy/codex/${drop.codexCid}/stream` : drop.url}
+              download={drop.codexCid ? `${drop.codexCid}.${drop.type === 'image' ? 'png' : drop.type === 'pdf' ? 'pdf' : 'bin'}` : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0ff' }}
+            >
+              Download {drop.type.toUpperCase()}
+            </a>
+          </div>
         )
+      ) : (
+        <div style={{ margin: '1em 0' }}>
+          <a
+            href={drop.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#0ff' }}
+          >
+            Download {drop.type.toUpperCase()}
+          </a>
+        </div>
       )}
       <div style={{ marginTop: 16 }}>
         <button onClick={onClose}>Close</button>
