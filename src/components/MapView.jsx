@@ -35,17 +35,25 @@ function MapView({ drops, userLocation, onDropTreasure, onCollectDrop, vpnStatus
     drops.forEach(drop => {
       const dMarker = L.marker([drop.lat, drop.lng]).addTo(leafletMapRef.current);
       const dist = getDistanceMeters(userLocation.lat, userLocation.lng, drop.lat, drop.lng);
-      let popup = `<b>Drop: ${drop.type.toUpperCase()}</b><br/>`;
+      const revealDist = drop.revealDistance || 20;
+      // Choose icon by type
+      let icon = '❓';
+      if (drop.type === 'text') icon = '📝';
+      else if (drop.type === 'image') icon = '🖼️';
+      else if (drop.type === 'pdf') icon = '📄';
+      // Teaser text
+      const teaser = drop.teaser ? `<span style='font-size:15px;font-weight:600;'>${icon} ${drop.teaser}</span>` : `<span style='font-size:15px;font-weight:600;'>${icon} A mysterious drop awaits!</span>`;
+      let popup = `${teaser}<br/><span style='color:#666;font-size:13px;'>Drop type: ${drop.type.toUpperCase()}</span><br/>`;
       popup += `<br/>Distance: ${dist < 1000 ? dist.toFixed(1)+'m' : (dist/1000).toFixed(2)+'km'}`;
-      if (dist <= 20) {
-        // Show collect button if within 20m
+      if (dist <= revealDist) {
+        // Show collect button if within reveal distance
         popup += `<br/><button id='collect-${drop.id}'>Collect</button>`;
       } else {
-        popup += `<br/><span style='color:#888;font-size:12px;'>Get closer to collect</span>`;
+        popup += `<br/><span style='color:#888;font-size:12px;'>Get closer to collect (within ${revealDist < 1000 ? revealDist + 'm' : (revealDist/1000).toFixed(2) + 'km'})</span>`;
       }
       dMarker.bindPopup(popup);
       dMarker.on('popupopen', () => {
-        if (dist <= 20) {
+        if (dist <= revealDist) {
           setTimeout(() => {
             const btn = document.getElementById(`collect-${drop.id}`);
             if (btn) btn.onclick = () => onCollectDrop(drop);
@@ -72,9 +80,9 @@ function MapView({ drops, userLocation, onDropTreasure, onCollectDrop, vpnStatus
       {/* Map */}
       <div ref={mapRef} className="zumap-leaflet-map" style={{ height: 'calc(100dvh - 40px)', maxHeight: 'calc(100vh - 40px)' }}></div>
       {/* Buttons, bottom center on mobile, top left on desktop */}
-      <div className="zumap-map-buttons" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center' }}>
-        <button onClick={onDropTreasure}>Drop Treasure</button>
-        <button onClick={() => {
+      <div className="zumap-map-buttons" style={{ position: 'absolute', bottom: 24, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none' }}>
+        <button style={{ pointerEvents: 'auto', margin: '0 8px' }} onClick={onDropTreasure}>Drop Treasure</button>
+        <button style={{ pointerEvents: 'auto', margin: '0 8px' }} onClick={() => {
           if (leafletMapRef.current && userLocation) {
             leafletMapRef.current.setView([userLocation.lat, userLocation.lng], leafletMapRef.current.getZoom(), { animate: true });
           }
