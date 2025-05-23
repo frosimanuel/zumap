@@ -20,7 +20,7 @@ export function listenToDrops(callback) {
 }
 
 // Upload any content (text or file) to Codex and return CID
-const CODEX_API_URL = import.meta.env.VITE_CODEX_API_URL || 'http://localhost:8080';
+const CODEX_API_URL = 'http://localhost:8080';
 
 export async function uploadToCodex(content) {
   const response = await fetch(`${CODEX_API_URL}/api/codex/v1/data`, {
@@ -49,7 +49,7 @@ export async function addDrop(drop, file) {
     if (file) {
       // Upload file to Codex only (no Firebase Storage)
       codexCid = await uploadToCodex(file);
-      url = `${CODEX_API_URL}/api/codex/v1/data/${codexCid}/network/stream`;
+      url = `http://localhost:8080/api/codex/v1/data/${codexCid}/network/stream`;
     } else if (drop.type === 'text' && typeof drop.url === 'string') {
       // Upload text to Codex
       codexCid = await uploadToCodex(drop.url);
