@@ -10,6 +10,7 @@ function ARView({ drop, onClose }) {
 
   useEffect(() => {
     let ignore = false;
+    let currentImgUrl = null;
     async function fetchContent() {
       if (!drop.codexCid) return;
       setLoading(true);
@@ -34,15 +35,15 @@ function ARView({ drop, onClose }) {
             if (!ignore) setError(`Codex error: ${res.status} ${errTxt}`);
             return;
           }
-          const blob = await res.blob();
-          // Check if blob is an image
-          if (!blob.type.startsWith('image/')) {
-            const errTxt = await blob.text();
-            console.error('Codex image fetch error: Not an image', errTxt);
-            if (!ignore) setError('Codex error: Not an image file.\n' + errTxt);
-            return;
+          const origBlob = await res.blob();
+          // Use original MIME type for blob, fallback to PNG only if needed
+          let imgType = origBlob.type && origBlob.type.startsWith('image/') ? origBlob.type : 'image/png';
+          let imgBlob = origBlob;
+          if (imgType !== origBlob.type) {
+            imgBlob = new Blob([origBlob], { type: imgType });
           }
-          const imgUrl = URL.createObjectURL(blob);
+          const imgUrl = URL.createObjectURL(imgBlob);
+          currentImgUrl = imgUrl;
           if (!ignore) setContent(imgUrl);
         } else if (drop.type === 'pdf') {
           const res = await fetch(url);
@@ -71,7 +72,10 @@ function ARView({ drop, onClose }) {
       }
     }
     fetchContent();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+      if (currentImgUrl) URL.revokeObjectURL(currentImgUrl);
+    };
   }, [drop.codexCid, drop.type]);
 
   return (
@@ -84,26 +88,23 @@ function ARView({ drop, onClose }) {
       ) : error ? (
         <div style={{margin:'1em 0',color:'#f88'}}>{error}</div>
       ) : drop.codexCid ? (
-        (() => {
-          let ext = 'bin';
-          let label = 'Download File';
-          if (drop.type === 'image') { ext = 'png'; label = 'Download Image'; }
-          else if (drop.type === 'pdf') { ext = 'pdf'; label = 'Download PDF'; }
-          else if (drop.type === 'text') { ext = 'txt'; label = 'Download Text'; }
-          return (
-            <div style={{margin:'1em 0', display:'flex', flexDirection:'column', alignItems:'center'}}>
-              <a
-                href={`http://localhost:8080/api/codex/v1/data/${drop.codexCid}/network/stream`}
-                download={`${drop.codexCid}.${ext}`}
-                style={{
-                  background: '#0ff',
-                  color: '#222',
-                  padding: '10px 24px',
-                  borderRadius: 6,
+        drop.type === 'text' ? (
+          <div style={{background:'#fff',color:'#222',padding:16,borderRadius:8,margin:'1em 0',wordBreak:'break-word',maxWidth:320,maxHeight:320,overflow:'auto'}}>{content}</div>
+        ) : drop.type === 'image' ? (
+          <div style={{margin:'1em 0'}}>
+            <img 
+              src={content} 
+              alt="Codex drop" 
+              style={{maxWidth:300,maxHeight:300,borderRadius:8,background:'#fff'}} 
+              onError={e => { e.target.style.display = 'none'; }}
+            />
+            <div style={{marginTop:8}}>
+              <a href={content} download={`drop-${drop.codexCid || 'image'}.png`} style={{color:'#fff',textDecoration:'underline',fontWeight:600}}>Download image</a>
                   fontWeight: 600,
                   textDecoration: 'none',
                   display: 'inline-block',
-                  fontSize: 18
+                  fontSize: 18,
+                  marginTop: preview ? 10 : 0
                 }}
               >
                 {label}

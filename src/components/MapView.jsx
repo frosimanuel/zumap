@@ -1,8 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
-// Real Leaflet map view
 import { getDistanceMeters } from '../utils/geo';
 import MapMenu from './MapMenu';
 
@@ -10,17 +8,47 @@ function MapView({ drops, userLocation, onDropTreasure, onCollectDrop, vpnStatus
   const mapRef = useRef(null);
   const leafletMapRef = useRef(null);
   const markersRef = useRef([]);
-  const mapInitialized = useRef(false);
+  // Persist zoom/center in state
+  const [mapView, setMapView] = useState(() => {
+    const storedMapView = localStorage.getItem('mapView');
+    if (storedMapView) {
+      return JSON.parse(storedMapView);
+    } else {
+      return {
+        center: userLocation ? [userLocation.lat, userLocation.lng] : [0, 0],
+        zoom: 16
+      };
+    }
+  });
 
+  // Initialize map as soon as userLocation is available
   useEffect(() => {
     if (!mapRef.current || !userLocation) return;
     if (!leafletMapRef.current) {
-      leafletMapRef.current = L.map(mapRef.current).setView([userLocation.lat, userLocation.lng], 16);
+      leafletMapRef.current = L.map(mapRef.current, {
+        center: [userLocation.lat, userLocation.lng],
+        zoom: 16,
+        tap: false // Fixes mobile double-tap bugs
+      });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
       }).addTo(leafletMapRef.current);
-      mapInitialized.current = true;
+      // Listen for move/zoom events to persist state
+      leafletMapRef.current.on('moveend zoomend', () => {
+        const center = leafletMapRef.current.getCenter();
+        const zoom = leafletMapRef.current.getZoom();
+        setMapView({ center: [center.lat, center.lng], zoom });
+        localStorage.setItem('mapView', JSON.stringify({ center: [center.lat, center.lng], zoom }));
+      });
+    } else {
+      // If map already exists and userLocation changes, pan to new location
+      leafletMapRef.current.panTo([userLocation.lat, userLocation.lng]);
     }
+  }, [userLocation]);
+
+  // Update markers when drops/userLocation change, but DO NOT reset map view
+  useEffect(() => {
+    if (!leafletMapRef.current || !userLocation) return;
     // Remove old markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
